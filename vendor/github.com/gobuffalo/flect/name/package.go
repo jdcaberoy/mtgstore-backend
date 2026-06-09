@@ -7,7 +7,6 @@ import (
 )
 
 // Package will attempt to return a package version of the name
-//
 //	$GOPATH/src/foo/bar = foo/bar
 //	$GOPATH\src\foo\bar = foo/bar
 //	foo/bar = foo/bar
@@ -16,7 +15,6 @@ func Package(s string) string {
 }
 
 // Package will attempt to return a package version of the name
-//
 //	$GOPATH/src/foo/bar = foo/bar
 //	$GOPATH\src\foo\bar = foo/bar
 //	foo/bar = foo/bar

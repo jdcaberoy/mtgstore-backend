@@ -1,7 +1,6 @@
 package name
 
 // Tableize returns an underscore, pluralized string
-//
 //	User = users
 //	Person = persons
 //	Admin/Widget = admin_widgets
@@ -10,7 +9,6 @@ func Tableize(s string) string {
 }
 
 // Tableize returns an underscore, pluralized string
-//
 //	User = users
 //	Person = persons
 //	Admin/Widget = admin_widgets

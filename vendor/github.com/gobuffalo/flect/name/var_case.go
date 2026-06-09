@@ -1,7 +1,6 @@
 package name
 
 // VarCaseSingle version of a name.
-//
 //	foo_bar = fooBar
 //	admin/widget = adminWidget
 //	User = users
@@ -10,7 +9,6 @@ func VarCaseSingle(s string) string {
 }
 
 // VarCaseSingle version of a name.
-//
 //	foo_bar = fooBar
 //	admin/widget = adminWidget
 //	User = users
@@ -19,7 +17,6 @@ func (i Ident) VarCaseSingle() Ident {
 }
 
 // VarCasePlural version of a name.
-//
 //	foo_bar = fooBars
 //	admin/widget = adminWidgets
 //	User = users
@@ -28,7 +25,6 @@ func VarCasePlural(s string) string {
 }
 
 // VarCasePlural version of a name.
-//
 //	foo_bar = fooBars
 //	admin/widget = adminWidgets
 //	User = users
@@ -37,7 +33,6 @@ func (i Ident) VarCasePlural() Ident {
 }
 
 // VarCase version of a name.
-//
 //	foo_bar = fooBar
 //	admin/widget = adminWidget
 //	Users = users
@@ -46,7 +41,6 @@ func (i Ident) VarCase() Ident {
 }
 
 // VarCase version of a name.
-//
 //	foo_bar = fooBar
 //	admin/widget = adminWidget
 //	Users = users

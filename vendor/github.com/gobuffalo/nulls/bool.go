@@ -57,7 +57,7 @@ func (ns Bool) MarshalJSON() ([]byte, error) {
 // the proper representation of that value. The strings
 // "true" and "t" will be considered "true", "false" and "f" will
 // be treated as "false". All other values will
-// be set to null by Valid = false
+//be set to null by Valid = false
 func (ns *Bool) UnmarshalJSON(text []byte) error {
 	t := string(text)
 	if t == "true" || t == "t" {

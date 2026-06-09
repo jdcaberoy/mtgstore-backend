@@ -7,7 +7,6 @@ import (
 )
 
 // File creates a suitable file name
-//
 //	admin/widget = admin/widget
 //	foo_bar = foo_bar
 //	U$ser = u_ser
@@ -16,7 +15,6 @@ func File(s string, exts ...string) string {
 }
 
 // File creates a suitable file name
-//
 //	admin/widget = admin/widget
 //	foo_bar = foo_bar
 //	U$ser = u_ser

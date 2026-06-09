@@ -3,7 +3,6 @@ package name
 import "unicode"
 
 // Char returns the first letter, lowered
-//
 //	"" = "x"
 //	"foo" = "f"
 //	"123d456" = "d"
@@ -12,7 +11,6 @@ func Char(s string) string {
 }
 
 // Char returns the first letter, lowered
-//
 //	"" = "x"
 //	"foo" = "f"
 //	"123d456" = "d"

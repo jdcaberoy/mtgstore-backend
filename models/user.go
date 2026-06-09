@@ -68,3 +68,10 @@ func (u *User) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
 func (u *User) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.NewErrors(), nil
 }
+
+func (u *User) HasEssentials() bool {
+	if u.Username == "" || u.Password == "" {
+		return false
+	}
+	return true
+}

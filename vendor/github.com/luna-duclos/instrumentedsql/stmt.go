@@ -15,10 +15,10 @@ type wrappedStmt struct {
 
 // Compile time validation that our types implement the expected interfaces
 var (
-	_ driver.Stmt             = wrappedStmt{}
-	_ driver.StmtExecContext  = wrappedStmt{}
+	_ driver.Stmt = wrappedStmt{}
+	_ driver.StmtExecContext = wrappedStmt{}
 	_ driver.StmtQueryContext = wrappedStmt{}
-	_ driver.ColumnConverter  = wrappedStmt{}
+	_ driver.ColumnConverter = wrappedStmt{}
 )
 
 func (s wrappedStmt) Close() (err error) {

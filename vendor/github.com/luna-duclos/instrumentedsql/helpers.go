@@ -58,6 +58,7 @@ func logQuery(ctx context.Context, opts opts, op, query string, err error, args 
 	opts.Log(ctx, op, keyvals...)
 }
 
+
 // namedValueToValue is a helper function copied from the database/sql package
 func namedValueToValue(named []driver.NamedValue) ([]driver.Value, error) {
 	dargs := make([]driver.Value, len(named))

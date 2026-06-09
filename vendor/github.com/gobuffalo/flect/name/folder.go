@@ -12,7 +12,6 @@ var alphanum = regexp.MustCompile(`[^a-zA-Z0-9_]+`)
 // Folder returns a suitable folder name. It removes any special characters
 // from the given string `s` and returns a string consists of alpha-numeric
 // characters.
-//
 //	admin/widget --> admin/widget
 //	adminUser --> admin_user
 //	foo_bar --> foo_bar
@@ -25,7 +24,6 @@ func Folder(s string, exts ...string) string {
 // Folder returns a suitable folder name. It removes any special characters
 // from the given string `s` and returns a string consists of alpha-numeric
 // characters.
-//
 //	admin/widget --> admin/widget
 //	adminUser --> admin_user
 //	foo_bar --> foo_bar
