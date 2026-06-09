@@ -1,0 +1,278 @@
+package pop
+
+import (
+	"bytes"
+	"database/sql"
+	"encoding/gob"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"strings"
+
+	"github.com/gofrs/uuid"
+	"github.com/jmoiron/sqlx"
+
+	"github.com/gobuffalo/pop/v6/columns"
+	"github.com/gobuffalo/pop/v6/logging"
+)
+
+func init() {
+	gob.Register(uuid.UUID{})
+}
+
+type commonDialect struct {
+	ConnectionDetails *ConnectionDetails
+}
+
+func (commonDialect) Lock(fn func() error) error {
+	return fn()
+}
+
+func (commonDialect) Quote(key string) string {
+	parts := strings.Split(key, ".")
+
+	for i, part := range parts {
+		part = strings.Trim(part, `"`)
+		part = strings.TrimSpace(part)
+
+		parts[i] = fmt.Sprintf(`"%v"`, part)
+	}
+
+	return strings.Join(parts, ".")
+}
+
+func genericCreate(c *Connection, model *Model, cols columns.Columns, quoter quotable) error {
+	keyType, err := model.PrimaryKeyType()
+	if err != nil {
+		return err
+	}
+	switch keyType {
+	case "int", "int64":
+		var id int64
+		cols.Remove(model.IDField())
+		w := cols.Writeable()
+		query := fmt.Sprintf(
+			"INSERT INTO %s (%s) VALUES (%s)",
+			quoter.Quote(model.TableName()),
+			w.QuotedString(quoter),
+			w.SymbolizedString(),
+		)
+		txlog(logging.SQL, c, query, model.Value)
+		res, err := c.Store.NamedExecContext(model.ctx, query, model.Value)
+		if err != nil {
+			return err
+		}
+		id, err = res.LastInsertId()
+		if err == nil {
+			model.setID(id)
+		}
+		if err != nil {
+			return err
+		}
+		return nil
+	case "UUID", "string":
+		if keyType == "UUID" && model.ID() == emptyUUID {
+			u, err := uuid.NewV4()
+			if err != nil {
+				return err
+			}
+			model.setID(u)
+		} else if model.ID() == "" {
+			return errors.New("missing ID value")
+		}
+		w := cols.Writeable()
+		w.Add(model.IDField())
+		query := fmt.Sprintf(
+			"INSERT INTO %s (%s) VALUES (%s)",
+			quoter.Quote(model.TableName()),
+			w.QuotedString(quoter),
+			w.SymbolizedString(),
+		)
+		txlog(logging.SQL, c, query, model.Value)
+		if _, err := c.Store.NamedExecContext(model.ctx, query, model.Value); err != nil {
+			return fmt.Errorf("named insert: %w", err)
+		}
+		return nil
+	}
+	return fmt.Errorf("can not use %s as a primary key type", keyType)
+}
+
+func genericUpdate(c *Connection, model *Model, cols columns.Columns, quoter quotable) error {
+	stmt := fmt.Sprintf(
+		"UPDATE %s AS %s SET %s WHERE %s",
+		quoter.Quote(model.TableName()),
+		model.Alias(),
+		cols.Writeable().QuotedUpdateString(quoter),
+		model.WhereNamedID(),
+	)
+	txlog(logging.SQL, c, stmt, model.ID())
+	_, err := c.Store.NamedExecContext(model.ctx, stmt, model.Value)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func genericUpdateQuery(
+	c *Connection,
+	model *Model,
+	cols columns.Columns,
+	quoter quotable,
+	query Query,
+	bindType int,
+) (int64, error) {
+	q := fmt.Sprintf(
+		"UPDATE %s AS %s SET %s",
+		quoter.Quote(model.TableName()),
+		model.Alias(),
+		cols.Writeable().QuotedUpdateString(quoter),
+	)
+
+	q, updateArgs, err := sqlx.Named(q, model.Value)
+	if err != nil {
+		return 0, err
+	}
+
+	sb := query.toSQLBuilder(model)
+	q = sb.buildWhereClauses(q)
+
+	q = sqlx.Rebind(bindType, q)
+
+	result, err := genericExec(c, q, append(updateArgs, sb.args...)...)
+	if err != nil {
+		return 0, err
+	}
+
+	n, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return n, err
+}
+
+func genericDestroy(c *Connection, model *Model, quoter quotable) error {
+	stmt := fmt.Sprintf(
+		"DELETE FROM %s AS %s WHERE %s",
+		quoter.Quote(model.TableName()),
+		model.Alias(),
+		model.WhereID(),
+	)
+	_, err := genericExec(c, stmt, model.ID())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func genericDelete(c *Connection, model *Model, query Query) error {
+	sqlQuery, args := query.ToSQL(model)
+	_, err := genericExec(c, sqlQuery, args...)
+	return err
+}
+
+func genericExec(c *Connection, stmt string, args ...any) (sql.Result, error) {
+	txlog(logging.SQL, c, stmt, args...)
+	res, err := c.Store.ExecContext(c.Context(), stmt, args...)
+	return res, err
+}
+
+func genericSelectOne(c *Connection, model *Model, query Query) error {
+	sqlQuery, args := query.ToSQL(model)
+	txlog(logging.SQL, query.Connection, sqlQuery, args...)
+	err := c.Store.GetContext(model.ctx, model.Value, sqlQuery, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func genericSelectMany(c *Connection, models *Model, query Query) error {
+	sqlQuery, args := query.ToSQL(models)
+	txlog(logging.SQL, query.Connection, sqlQuery, args...)
+	err := c.Store.SelectContext(models.ctx, models.Value, sqlQuery, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func genericLoadSchema(d dialect, r io.Reader) error {
+	deets := d.Details()
+
+	// Open DB connection on the target DB
+	db, err := openPotentiallyInstrumentedConnection(d, d.MigrationURL())
+	if err != nil {
+		return fmt.Errorf("unable to load schema for %s: %w", deets.Database, err)
+	}
+	defer db.Close()
+
+	// Get reader contents
+	contents, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+
+	// Strip psql backslash commands (e.g. \restrict, \unrestrict) that
+	// may be present in pg_dump output from PostgreSQL 17.6+. These are
+	// psql-only directives and are not valid SQL.
+	contents = stripPsqlBackslashCommands(contents)
+	contents = bytes.TrimSpace(contents)
+	if len(contents) == 0 {
+		log(logging.Info, "schema is empty after stripping psql meta-commands for %s, skipping", deets.Database)
+		return nil
+	}
+
+	_, err = db.Exec(string(contents))
+	if err != nil {
+		return fmt.Errorf("unable to load schema for %s: %w", deets.Database, err)
+	}
+
+	log(logging.Info, "loaded schema for %s", deets.Database)
+	return nil
+}
+
+func genericDumpSchema(deets *ConnectionDetails, cmd *exec.Cmd, w io.Writer) error {
+	log(logging.SQL, strings.Join(cmd.Args, " "))
+
+	bb := &bytes.Buffer{}
+
+	cmd.Stdout = bb
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	// Strip psql backslash commands (e.g. \restrict, \unrestrict) from
+	// pg_dump output so schema.sql stays clean and loadable without psql.
+	clean := stripPsqlBackslashCommands(bb.Bytes())
+	if len(bytes.TrimSpace(clean)) == 0 {
+		return fmt.Errorf("unable to dump schema for %s", deets.Database)
+	}
+	if _, err := w.Write(clean); err != nil {
+		return err
+	}
+
+	log(logging.Info, "dumped schema for %s", deets.Database)
+	return nil
+}
+
+// stripPsqlBackslashCommands removes lines that start with a psql backslash
+// meta-command (e.g. \restrict, \unrestrict). These directives are emitted by
+// pg_dump 17.6+ but are not valid SQL and cause syntax errors when executed
+// directly via db.Exec().
+func stripPsqlBackslashCommands(data []byte) []byte {
+	var buf bytes.Buffer
+	for _, line := range bytes.SplitAfter(data, []byte("\n")) {
+		trimmed := bytes.TrimLeft(line, " \t")
+		if len(trimmed) > 0 && trimmed[0] == '\\' {
+			continue
+		}
+		buf.Write(line)
+	}
+	return buf.Bytes()
+}
