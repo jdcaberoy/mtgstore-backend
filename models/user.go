@@ -17,7 +17,7 @@ type User struct {
 
 	Username string
 	Password string
-	Type     int
+	Type     UserType
 	Address  string
 	UserType UserType
 	// Transactions
