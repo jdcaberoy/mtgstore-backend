@@ -19,7 +19,8 @@ type Binder struct {
 	Description   string
 	OwnerID       uuid.UUID
 	OwnerUsername string
-	// Cards
+	Hidden        bool
+	Cards         Cards
 }
 
 // String is not required by pop and may be deleted

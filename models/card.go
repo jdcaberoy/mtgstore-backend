@@ -24,6 +24,7 @@ type Card struct {
 	Foil       bool
 	Price      float64
 	Remarks    string
+	Hidden     bool
 }
 
 // String is not required by pop and may be deleted
