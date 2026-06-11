@@ -21,23 +21,28 @@ type UserServiceInterface interface {
 	CreateUser(ctx *gin.Context, u model.User) error
 }
 
-func (s *UserService) CreateUser(ctx *gin.Context, u model.User) error {
+func (s *UserService) CreateUser(ctx *gin.Context, u model.User) (model.User, error) {
 	if !u.HasEssentials() {
-		return fmt.Errorf("missing username or Password")
+		return model.User{}, fmt.Errorf("missing username or Password")
 	}
+	uid, err := uuid.NewV7()
+	if err != nil {
+		return model.User{}, fmt.Errorf("error creating new uuid: %v", err)
+	}
+	u.ID = uid
 	u.Type = model.Guest
 	tx, err := s.DB.NewTransaction()
 	if err != nil {
-		return fmt.Errorf("error creating new transaction: %v", err)
+		return model.User{}, fmt.Errorf("error creating new transaction: %v", err)
 	}
 	defer tx.Store.Rollback()
 	if err = tx.Create(&u); err != nil {
-		return fmt.Errorf("error creating new user: %v", err)
+		return model.User{}, fmt.Errorf("error creating new user: %v", err)
 	}
 	if err = tx.Store.Commit(); err != nil {
-		return fmt.Errorf("error committ saving user")
+		return model.User{}, fmt.Errorf("error committ saving user")
 	}
-	return nil
+	return u, nil
 }
 
 func (s *UserService) UpdateUser(ctx *gin.Context, u model.User) error {
