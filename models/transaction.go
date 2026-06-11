@@ -28,10 +28,10 @@ type Transaction struct {
 type TransactionStatus string
 
 const (
-	Pending   TransactionStatus = "Pending"
-	Approved                    = "Approved"
-	Declined                    = "Declined"
-	Cancelled                   = "Cancelled"
+	Pending   TransactionStatus = "Pending"   // request sent by initiator
+	Approved                    = "Approved"  // request approved by other party
+	Declined                    = "Declined"  // request declined by other party
+	Cancelled                   = "Cancelled" // request cancelled by initiator
 )
 
 // String is not required by pop and may be deleted
