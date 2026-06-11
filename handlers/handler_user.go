@@ -44,3 +44,22 @@ func (s *BinderServiceHandler) CreateUser(ctx *gin.Context) {
 		"user": user,
 	})
 }
+
+func (s *BinderServiceHandler) UpdateUser(ctx *gin.Context) {
+	var user model.User
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{
+			"error": "could not marshall user values: " + err.Error(),
+		})
+		return
+	}
+	if err := s.UserService.UpdateUser(ctx, user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Could not update user." + err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "update user successful",
+	})
+}
