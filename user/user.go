@@ -18,10 +18,10 @@ func NewUserService(db *pop.Connection) *UserService {
 }
 
 type UserServiceInterface interface {
-	SaveUser(u model.User) error
+	CreateUser(ctx *gin.Context, u model.User) error
 }
 
-func (s *UserService) SaveUser(ctx *gin.Context, u model.User) error {
+func (s *UserService) CreateUser(ctx *gin.Context, u model.User) error {
 	if !u.HasEssentials() {
 		return fmt.Errorf("missing username or Password")
 	}
@@ -60,8 +60,8 @@ func (s *UserService) UpdateUser(ctx *gin.Context, u model.User) error {
 	return nil
 }
 
-func (s *UserService) SearchUserID(ctx *gin.Context, u uuid.UUID) (model.User, error) {
-	if u.ID.IsNil() {
+func (s *UserService) SearchbyUserID(ctx *gin.Context, u uuid.UUID) (model.User, error) {
+	if u.IsNil() {
 		return model.User{}, fmt.Errorf("no user ID found")
 	}
 	tx, err := s.DB.NewTransaction()
