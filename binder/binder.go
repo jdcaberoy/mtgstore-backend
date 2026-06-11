@@ -11,13 +11,10 @@ import (
 
 type BinderService struct {
 	DB *pop.Connection
-
-	BinderServiceInterface
 }
 
 type BinderServiceInterface interface {
-	CreateBinder(ctx *gin.Context)
-	AddCardstoBinder(ctx *gin.Context, binder model.Binder, cards model.Cards)
+	CreateBinder(b model.Binder)
 }
 
 func NewBinderService(db *pop.Connection) *BinderService {

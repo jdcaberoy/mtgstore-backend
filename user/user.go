@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	pop "github.com/gobuffalo/pop/v6"
+	"github.com/gofrs/uuid"
 	model "github.com/jdcaberoy/mtgstore-backend/models"
 )
 
@@ -14,6 +15,10 @@ type UserService struct {
 
 func NewUserService(db *pop.Connection) *UserService {
 	return &UserService{DB: db}
+}
+
+type UserServiceInterface interface {
+	SaveUser(u model.User) error
 }
 
 func (s *UserService) SaveUser(ctx *gin.Context, u model.User) error {
@@ -53,4 +58,20 @@ func (s *UserService) UpdateUser(ctx *gin.Context, u model.User) error {
 	tx.Update(&foundUser)
 	tx.Store.Commit()
 	return nil
+}
+
+func (s *UserService) SearchUserID(ctx *gin.Context, u uuid.UUID) (model.User, error) {
+	if u.ID.IsNil() {
+		return model.User{}, fmt.Errorf("no user ID found")
+	}
+	tx, err := s.DB.NewTransaction()
+	if err != nil {
+		return model.User{}, fmt.Errorf("error creating new transaction: %v", err)
+	}
+	defer tx.Store.Rollback()
+	var foundUser model.User
+	if err = tx.Q().Where("id = ?", u).First(&foundUser); err != nil {
+		return model.User{}, fmt.Errorf("error finding user: %v", err)
+	}
+	return foundUser, nil
 }
