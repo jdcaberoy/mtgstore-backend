@@ -21,8 +21,7 @@ type Transaction struct {
 	ReceiverName      string
 	ReceiverID        uuid.UUID
 	TransactionStatus TransactionStatus
-	Start             time.Time
-	End               time.Time
+	LastUpdate        time.Time
 }
 
 type TransactionStatus string
