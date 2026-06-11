@@ -19,7 +19,7 @@ func NewUserServiceHandler(usersvc *user.UserService, bindersvc *binder.BinderSe
 	return &UserServiceHandler{UserService: usersvc, BinderService: bindersvc}
 }
 
-func (s *BinderServiceHandler) CreateUser(ctx *gin.Context) {
+func (s *UserServiceHandler) CreateUser(ctx *gin.Context) {
 	var user model.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{
@@ -45,7 +45,7 @@ func (s *BinderServiceHandler) CreateUser(ctx *gin.Context) {
 	})
 }
 
-func (s *BinderServiceHandler) UpdateUser(ctx *gin.Context) {
+func (s *UserServiceHandler) UpdateUser(ctx *gin.Context) {
 	var user model.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{
