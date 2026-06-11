@@ -2,7 +2,6 @@ package binder
 
 import (
 	"fmt"
-	"slices"
 
 	"github.com/gin-gonic/gin"
 	pop "github.com/gobuffalo/pop/v6"
@@ -64,7 +63,7 @@ func (s *BinderService) CreateDefaultBinder(ctx *gin.Context, u model.User) erro
 type BinderQueryParams struct {
 	OwnerUsername string
 	BinderName    string
-	pages         int
+	Pages         int
 }
 
 func (s *BinderService) GetBinders(ctx *gin.Context, params BinderQueryParams) (model.Binders, error) {
@@ -74,8 +73,9 @@ func (s *BinderService) GetBinders(ctx *gin.Context, params BinderQueryParams) (
 	}
 	var Binders model.Binders
 	// to test fuzze search results
-	tx.Eager("Cards").Q().Where("OwnerUsername ILIKE ?", "%"+params.OwnerUsername+"%").All(&Binders)
-	slices.Delete(Binders[0])
+	if err = tx.Eager("Cards").Q().Where("OwnerUsername ILIKE ?", "%"+params.OwnerUsername+"%").All(&Binders); err != nil {
+		return model.Binders{}, fmt.Errorf("error binder query: %v", err)
+	}
 	return Binders, nil
 }
 
