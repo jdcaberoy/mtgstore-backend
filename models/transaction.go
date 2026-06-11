@@ -15,13 +15,16 @@ type Transaction struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
-	Initiator         string
-	SenderName        string
-	SenderID          uuid.UUID
-	ReceiverName      string
-	ReceiverID        uuid.UUID
-	TransactionStatus TransactionStatus
-	LastUpdate        time.Time
+	SenderID   uuid.UUID `json:"sender_id" db:"sender_id"`
+	ReceiverID uuid.UUID `json:"receiver_id" db:"receiver_id"`
+
+	Sender   User `json:"sender" belongs_to:"user" fk_id:"sender_id"`
+	Receiver User `json:"receiver" belongs_to:"user" fk_id:"receiver_id"`
+
+	RequestorName     string            `json:"requestor_name" db:"requestor_name"`
+	SenderName        string            `json:"sender_name" db:"sender_name"`
+	ReceiverName      string            `json:"receiver_name" db:"receiver_name"`
+	TransactionStatus TransactionStatus `json:"transaction_status" db:"transaction_status"`
 }
 
 type TransactionStatus string

@@ -1,4 +1,19 @@
 create_table("transactions") {
 	t.Column("id", "uuid", {primary: true})
 	t.Timestamps()
+
+	t.Column("sender_id", "uuid", {null: false})
+	t.Column("receiver_id", "uuid", {null: false})
+
+	t.Column("requestor_name", "string", {null: false})
+	t.Column("sender_name", "string", {null: false})
+	t.Column("receiver_name", "string", {null: false})
+
+	t.Column("transaction_status", "string", {null: false})
+
+	t.ForeignKey("sender_id", {"users": ["id"]})
+	t.ForeignKey("receiver_id", {"users": ["id"]})
 }
+
+add_index("transactions", "sender_id", {})
+add_index("transactions", "receiver_id", {})

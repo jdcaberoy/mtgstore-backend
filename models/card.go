@@ -15,16 +15,17 @@ type Card struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
-	Name       string
-	SFID       string // scryfall ID
-	Set        string
-	Quantity   int
-	BinderID   uuid.UUID
-	BinderName string
-	Foil       bool
-	Price      float64
-	Remarks    string
-	Hidden     bool
+	Name       string    `db:"name" json:"name"`
+	SFID       string    `db:"sfid" json:"sfid"`
+	Set        string    `db:"set" json:"set"`
+	Quantity   int       `db:"quantity" json:"quantity"`
+	BinderID   uuid.UUID `db:"binder_id" json:"-"`
+	Binder     *Binder   `belongs_to:"binder" json:"binder,omitempty"`
+	BinderName string    `db:"binder_name" json:"binder_name"`
+	Foil       bool      `db:"foil" json:"foil"`
+	Price      float64   `db:"price" json:"price"`
+	Remarks    string    `db:"remarks" json:"remarks"`
+	Hidden     bool      `db:"hidden" json:"hidden"`
 }
 
 // String is not required by pop and may be deleted

@@ -1,4 +1,23 @@
 create_table("cards") {
 	t.Column("id", "uuid", {primary: true})
 	t.Timestamps()
+
+	t.Column("name", "string", {null: false})
+	t.Column("sfid", "string", {null: false})
+	t.Column("set", "string", {null: false})
+	t.Column("quantity", "integer", {null: false, default: 1})
+
+	t.Column("binder_id", "uuid", {null: false})
+	t.Column("binder_name", "string", {null: false})
+
+	t.Column("foil", "boolean", {default: false})
+	t.Column("price", "float", {default: 0})
+
+	t.Column("remarks", "text", {})
+	t.Column("hidden", "boolean", {default: false})
+
+	t.ForeignKey("binder_id", {"binders": ["id"]})
 }
+
+add_index("cards", "binder_id", {})
+add_index("cards", "sfid", {})

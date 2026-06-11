@@ -15,12 +15,14 @@ type Binder struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
-	Name          string
-	Description   string
-	OwnerID       uuid.UUID
-	OwnerUsername string
-	Hidden        bool
-	Cards         Cards
+	Name          string    `db:"name" json:"name"`
+	Description   string    `db:"description" json:"description"`
+	OwnerID       uuid.UUID `db:"owner_id" json:"owner_id"`
+	OwnerUsername string    `db:"owner_username" json:"owner_username"`
+	Hidden        bool      `db:"hidden" json:"hidden"`
+
+	Owner *User `belongs_to:"user" json:"user,omitempty" fk_id:"owner_id" `
+	Cards Cards `has_many:"cards" json:"cards,omitempty"`
 }
 
 // String is not required by pop and may be deleted

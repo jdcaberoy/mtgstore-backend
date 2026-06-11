@@ -15,14 +15,14 @@ type User struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
-	Username string
-	Password string
-	Type     UserType
-	Address  string
-	UserType UserType
-	// Transactions
-	// Binders
+	Username string   `json:"username" db:"username"`
+	Password string   `json:"password" db:"password"`
+	Type     UserType `json:"type" db:"type"`
+	Address  string   `json:"address" db:"address"`
 
+	SentTransactions     Transactions `json:"sent_transactions" has_many:"transactions" fk_id:"sender_id"`
+	ReceivedTransactions Transactions `json:"received_transactions" has_many:"transactions" fk_id:"receiver_id"`
+	Binders              Binders      `json:"binders" has_many:"binders" fk_id:"owner_id"`
 }
 
 type UserType int

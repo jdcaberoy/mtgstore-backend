@@ -20,7 +20,7 @@ func (s *UserService) SaveUser(ctx *gin.Context, u model.User) error {
 	if !u.HasEssentials() {
 		return fmt.Errorf("missing username or Password")
 	}
-	u.UserType = model.Guest
+	u.Type = model.Guest
 	tx, err := s.DB.NewTransaction()
 	if err != nil {
 		return fmt.Errorf("error creating new transaction: %v", err)

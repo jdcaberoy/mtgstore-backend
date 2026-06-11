@@ -1,4 +1,14 @@
 create_table("binders") {
 	t.Column("id", "uuid", {primary: true})
 	t.Timestamps()
+
+	t.Column("name", "string", {null: false})
+	t.Column("description", "text", {})
+	t.Column("owner_id", "uuid", {null: false})
+	t.Column("owner_username", "string", {null: false})
+	t.Column("hidden", "boolean", {default: false})
+
+	t.ForeignKey("owner_id", {"users": ["id"]})
 }
+
+add_index("binders", "owner_id", {})
